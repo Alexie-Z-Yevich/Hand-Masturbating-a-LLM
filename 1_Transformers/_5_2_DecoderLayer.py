@@ -1,6 +1,11 @@
 # 5_2_解码器
 from torch import nn
 
+from _1_PositionalEncoder import PositionalEncoder
+from _2_MultiHeadAttention import MultiHeadAttention
+from _3_FeedForward import FeedForward
+from _4_Norm import Norm
+
 
 class DecoderLayer(nn.Module):
 
