@@ -1,6 +1,9 @@
 # 5_3_整体结构实现
 from torch import nn
 
+from _5_1_EncoderLayer import Encoder
+from _5_2_DecoderLayer import Decoder
+
 
 class Transformer(nn.Module):
 
