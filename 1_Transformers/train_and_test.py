@@ -1,18 +1,17 @@
+# 只能尽可能的优化代码结构，但是不保证能否运行，后续我会在深入学习之后，再来完善这个代码
+# 目前仅作为模板思想参考
 import time
 
+import numpy as np
 import torch
-from torchtext.data import Field
-from torchtext.datasets import Multi30k
-from torch import nn
+import torch.nn as nn
 import torch.nn.functional as F
-from _5_3_Transformer import Transformer
+from torch.autograd import Variable
 
-EN_TEXT = Field(tokenize="spacy", tokenizer_language="en_core_web_sm")
-FR_TEXT = Field(tokenize="spacy", tokenizer_language="fr_core_news_sm")
-# 读取数据并建立词汇表
-train_data, valid_data, test_data = Multi30k.splits(exts=(".en", ".fr"), fields=(EN_TEXT, FR_TEXT))
-EN_TEXT.build_vocab(train_data, min_freq=2)
-FR_TEXT.build_vocab(train_data, min_freq=2)
+from _5_3_Transformer import Transformer
+from tools._0_3_torchtext import EN_TEXT, FR_TEXT, train_iter, input_pad
+from tools._0_4_create_masks import create_masks
+from tools._0_5_tokenize import tokenize_en
 
 # 模型参数定义
 d_model = 512
@@ -31,7 +30,6 @@ optim = torch.optim.Adam(model.parameters(), lr=0.0001, betas=(0.9, 0.98), eps=1
 
 # 模型训练
 def tarin_model(epochs, print_every=100):
-
     model.train()
 
     start = time.time()
@@ -68,22 +66,32 @@ def tarin_model(epochs, print_every=100):
                 total_loss = 0
                 temp = time.time()
 
+
 # 模型测试
 def translate(model, src, max_len=80, custom_string=False):
 
     model.eval()
+    sentence = None
+    if custom_string:
+        # Tokenize the input string
+        tokenized_src = tokenize_en(src)
 
-    if custom_sentence == True:
-        src = tokenize_en(src)
-        sentence = Variable(torch.LongTensor([[EN_TEXT.vocab.stoi[tok] for tok in sentence]])).cuda()
-    src_mask = (src != input_pad).unsqueeze(-2)
-        e_output = model.encoder(src, src_mask)
+        # Convert tokenized source to tensor indices
+        sentence = torch.tensor([[EN_TEXT.vocab.stoi[tok] for tok in tokenized_src]],
+                                device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
 
-        outputs = torch.zeros(max_len).type_as(src.data)
-        outputs[0] = torch.LongTensor([FR_TEXT.vocab.stoi["<sos>"]])
+    # Create source mask
+    src_mask = (sentence != input_pad).unsqueeze(-2)
+
+    # Encoder output
+    e_output = model.encoder(sentence, src_mask)
+
+    # Prepare output tensor
+    outputs = torch.zeros(max_len, dtype=torch.long, device=sentence.device)
+    outputs[0] = FR_TEXT.vocab.stoi["<sos>"]
 
     for i in range(1, max_len):
-        trg_mask = np.triu(np.ones((1, i, i), k = 1).astype("uint8"))
+        trg_mask = np.triu(np.ones((1, i, i), k=1).astype("uint8"))
         trg_mask = Variable(torch.from_numpy(trg_mask) == 0).cuda()
 
         out = model.out(model.decoder(outputs[:i].unsqueeze(0), e_output, src_mask, trg_mask))
@@ -93,5 +101,4 @@ def translate(model, src, max_len=80, custom_string=False):
         outputs[i] = ix[0][0]
         if ix[0][0] == FR_TEXT.vocab.stoi["<eos>"]:
             break
-
     return ' '.join([FR_TEXT.vocab.itos[ix] for ix in outputs[:i]])
