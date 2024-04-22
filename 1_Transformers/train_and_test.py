@@ -1,4 +1,4 @@
-# 只能尽可能的优化代码结构，但是不保证能否运行，后续我会在深入学习之后，再来完善这个代码
+# 只能能够正常运行，但是不会产生任何结果，后续我会在深入学习之后，再来完善这个代码
 # 目前仅作为模板思想参考
 import time
 
@@ -19,7 +19,7 @@ heads = 8
 N = 6
 src_vocab = len(EN_TEXT.vocab)
 trg_vocab = len(FR_TEXT.vocab)
-model = Transformer(src_vocab, trg_vocab, d_model, N, heads)
+model = Transformer(src_vocab, trg_vocab, d_model, N, heads, dropout=0.1)
 for p in model.parameters():  # 初始化模型参数
     if p.dim() > 1:  # 判断维度是否大于1
         nn.init.xavier_uniform_(p)  # 使用均匀分布初始化参数

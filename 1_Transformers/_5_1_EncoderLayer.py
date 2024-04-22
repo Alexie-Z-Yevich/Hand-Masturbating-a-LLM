@@ -37,7 +37,7 @@ class Encoder(nn.Module):
         super().__init__()
         self.N = N
         self.embed = Embedder(vocab_size, d_model)
-        self.pe = PositionalEncoder(d_model, dropout=dropout)
+        self.pe = PositionalEncoder(d_model)
         self.layers = get_clones(EncoderLayer(d_model, heads, dropout), N)
         self.norm = Norm(d_model)
 

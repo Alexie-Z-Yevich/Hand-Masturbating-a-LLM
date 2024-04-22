@@ -14,22 +14,25 @@ french_tokenizer = get_tokenizer('spacy', language='fr_core_news_sm')
 def build_vocab(sentences, tokenizer_fn):
     def yield_tokens(data_iter):
         for text_entry in data_iter:
-            yield tokenizer_fn(text_entry)
+            for tok in tokenizer_fn(text_entry):
+                yield tok
 
-    return build_vocab_from_iterator(yield_tokens, sentences)
+                # 注意：这里不需要再将[sentences]包装在生成器表达式中
+
+    return build_vocab_from_iterator(yield_tokens(sentences), specials=[])
 
 
-# 类似于旧版EN_TEXT和FR_TEXT的对象
 class TextData:
     def __init__(self, vocab):
         self.vocab = vocab
         self.pad_token = '<pad>'
-        self.vocab.add_token(self.pad_token, special_tokens=True)
+        # 在新版本的 torchtext 中，你可以直接这样添加新的词汇
+        self.vocab.insert_token(self.pad_token, 0)  # 插入在词汇表最前面，并分配索引 0
 
     def get_pad_index(self):
-        return self.vocab.stoi[self.pad_token]
-
-    # 并行文本数据集
+        # 使用 vocab.get_stoi() 方法或者 vocab[] 来获取词汇的索引
+        # return self.vocab.get_stoi()[self.pad_token]  # 如果你确定你的 torchtext 版本有这个方法
+        return self.vocab[self.pad_token]  # 推荐使用这种方式，因为它与版本兼容性更好
 
 
 class ParallelTextDataset(Dataset):
@@ -45,10 +48,13 @@ class ParallelTextDataset(Dataset):
     def __getitem__(self, idx):
         english_sentence = self.english_sentences[idx]
         french_sentence = self.french_sentences[idx]
+
+        # 使用在函数外部定义的 tokenizer 和 french_tokenizer
         english_tensor = torch.tensor([self.english_vocab[tok] for tok in tokenizer(english_sentence)],
                                       dtype=torch.long)
         french_tensor = torch.tensor([self.french_vocab[tok] for tok in french_tokenizer(french_sentence)],
                                      dtype=torch.long)
+
         return {'English': english_tensor, 'French': french_tensor}
 
     # 初始化函数
