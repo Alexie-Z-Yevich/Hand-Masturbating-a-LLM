@@ -1,3 +1,4 @@
+# 两个数据集加起来大概有十几个G，这里不载入测试
 from datasets import concatenate_datasets, load_dataset
 
 bookcorpus = load_dataset('bookcorpus', split="train")
