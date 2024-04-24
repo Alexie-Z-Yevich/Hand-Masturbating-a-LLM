@@ -5,3 +5,4 @@ spacy~=3.7.4
 datasets~=2.19.0
 tokenizers~=0.15.2
 numpy~=1.26.3
+transformers~=4.39.3

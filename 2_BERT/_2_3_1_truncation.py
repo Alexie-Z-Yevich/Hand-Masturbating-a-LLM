@@ -1,10 +1,10 @@
 from _2_1_prepare_dataset import d
-from _2_2_Word_Piece import tokenizer, truncation_longer_sample
+from _2_2_Word_Piece import tokenizer, truncation_longer_sample, max_length
 
 
 def encode_with_truncation(example):
-    """使用词元分析对句子进行处理并截断的映射函数（Mappiong function），该处为512"""
-    return tokenizer(example['text'], truncation=True, padding='max_length', max_length=512,
+    """使用词元分析对句子进行处理并截断的映射函数（Mappiong function）"""
+    return tokenizer(example['text'], truncation=True, padding='max_length', max_length=max_length,
                      return_special_tokens_mask=True)
 
 
